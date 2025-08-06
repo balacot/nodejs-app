@@ -18,13 +18,11 @@ resource "aws_iam_role" "codebuild_role" {
   })
 }
 
-# POLÍTICA MANEJADA (reemplazamos DeveloperAccess por AdministratorAccess temporal para evitar errores)
 resource "aws_iam_role_policy_attachment" "codebuild_admin_policy" {
   role       = aws_iam_role.codebuild_role.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
-# LOGS PERMISSIONS
 resource "aws_iam_role_policy" "codebuild_logs" {
   name = "${var.project_name}-codebuild-logs-policy"
   role = aws_iam_role.codebuild_role.name
@@ -43,7 +41,6 @@ resource "aws_iam_role_policy" "codebuild_logs" {
   })
 }
 
-# S3 PERMISSIONS PARA LEER ARTEFACTOS
 resource "aws_iam_role_policy" "codebuild_s3_artifact_access" {
   name = "${var.project_name}-codebuild-s3-artifact-access"
   role = aws_iam_role.codebuild_role.name
@@ -65,7 +62,6 @@ resource "aws_iam_role_policy" "codebuild_s3_artifact_access" {
   })
 }
 
-# PERMISOS PARA USAR ECR
 resource "aws_iam_role_policy" "codebuild_ecr_permissions" {
   name = "${var.project_name}-codebuild-ecr-policy"
   role = aws_iam_role.codebuild_role.name
@@ -107,13 +103,11 @@ resource "aws_iam_role" "codepipeline_role" {
   })
 }
 
-# POLÍTICA MANEJADA
 resource "aws_iam_role_policy_attachment" "codepipeline_policies" {
   role       = aws_iam_role.codepipeline_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess"
 }
 
-# PERMISOS PARA ACCEDER A ARTEFACTOS EN S3
 resource "aws_iam_role_policy" "codepipeline_artifact_permissions" {
   name = "${var.project_name}-codepipeline-artifact-policy"
   role = aws_iam_role.codepipeline_role.name
@@ -135,7 +129,6 @@ resource "aws_iam_role_policy" "codepipeline_artifact_permissions" {
   })
 }
 
-# PERMISOS PARA QUE CODEPIPELINE INICIE CODEBUILD
 resource "aws_iam_role_policy" "codepipeline_startbuild" {
   name = "${var.project_name}-startbuild-policy"
   role = aws_iam_role.codepipeline_role.id
@@ -150,5 +143,31 @@ resource "aws_iam_role_policy" "codepipeline_startbuild" {
       ],
       Resource = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:project/${var.project_name}-build"
     }]
+  })
+}
+
+#####################################
+# PERMISOS PARA ECS DESDE CODEPIPELINE
+#####################################
+resource "aws_iam_role_policy" "codepipeline_ecs_permissions" {
+  name = "${var.project_name}-codepipeline-ecs-policy"
+  role = aws_iam_role.codepipeline_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecs:RegisterTaskDefinition",
+          "ecs:DescribeServices",
+          "ecs:DescribeTaskDefinition",
+          "ecs:UpdateService",
+          "ecs:RunTask",
+          "iam:PassRole"
+        ],
+        Resource = "*"
+      }
+    ]
   })
 }
