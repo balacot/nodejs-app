@@ -101,3 +101,26 @@ resource "aws_iam_role_policy" "codepipeline_startbuild" {
     ]
   })
 }
+
+resource "aws_iam_role_policy" "codebuild_s3_artifact_access" {
+  name = "${var.project_name}-codebuild-s3-artifact-access"
+  role = aws_iam_role.codebuild_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:GetBucketVersioning"
+        ],
+        Resource = [
+          "arn:aws:s3:::${var.artifact_bucket}",
+          "arn:aws:s3:::${var.artifact_bucket}/*"
+        ]
+      }
+    ]
+  })
+}
