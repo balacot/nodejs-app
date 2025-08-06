@@ -56,3 +56,9 @@ variable "github_oauth_token" {
   type        = string
   sensitive   = true
 }
+
+variable "artifact_bucket" {
+  description = "Nombre del bucket de artefactos de CodePipeline"
+  type        = string
+}
+

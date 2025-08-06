@@ -38,3 +38,26 @@ resource "aws_iam_role_policy_attachment" "codepipeline_policies" {
   policy_arn = "arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess"
 }
 
+resource "aws_iam_role_policy" "codepipeline_artifact_permissions" {
+  name = "${var.project_name}-codepipeline-artifact-policy"
+  role = aws_iam_role.codepipeline_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:GetBucketVersioning"
+        ],
+        Resource = [
+          "arn:aws:s3:::${var.artifact_bucket}",
+          "arn:aws:s3:::${var.artifact_bucket}/*"
+        ]
+      }
+    ]
+  })
+}
+
