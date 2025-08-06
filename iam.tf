@@ -61,3 +61,23 @@ resource "aws_iam_role_policy" "codepipeline_artifact_permissions" {
   })
 }
 
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role_policy" "codepipeline_startbuild" {
+  name = "${var.project_name}-startbuild-policy"
+  role = aws_iam_role.codepipeline_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "codebuild:StartBuild",
+          "codebuild:BatchGetBuilds"
+        ],
+        Resource = "arn:aws:codebuild:${var.region}:${data.aws_caller_identity.current.account_id}:project/${var.project_name}-build"
+      }
+    ]
+  })
+}
