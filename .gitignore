@@ -1,0 +1,11 @@
+# Archivos de configuración local
+.terraform/
+.terraform.lock.hcl
+
+# Archivos sensibles
+terraform.tfvars
+
+# Archivos de salida
+*.log
+*.tfstate
+*.tfstate.backup

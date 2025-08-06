@@ -1,0 +1,21 @@
+Estructura
+
+ci-cd-nodejs-terraform/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── ecr.tf
+├── iam.tf
+├── codebuild.tf
+├── ecs.tf
+├── alb.tf
+├── codepipeline.tf
+├── buildspec.yml        # copiarás esto a tu repo GitHub
+├── Dockerfile           # copiarás esto a tu repo GitHub
+
+
+📌 Importante:
+Para que esto funcione, necesitas definir esta variable en tu entorno local (o en un archivo terraform.tfvars):
+
+github_oauth_token = "ghp_tuTokenDeAccesoPersonal"
+Si no lo tienes aún, puedes crear uno en: https://github.com/settings/tokens (con permiso a repo)

@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Autenticando con ECR..."
+      - aws ecr get-login-password | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+  build:
+    commands:
+      - echo "Construyendo imagen Docker..."
+      - docker build -t $REPOSITORY_URI:$TAG .
+      - docker tag $REPOSITORY_URI:$TAG $REPOSITORY_URI:latest
+  post_build:
+    commands:
+      - echo "Publicando imagen a ECR..."
+      - docker push $REPOSITORY_URI:$TAG
+      - docker push $REPOSITORY_URI:latest
+      - echo '[{"name":"nodejs-container","imageUri":"'"$REPOSITORY_URI"':latest"}]' > imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json
