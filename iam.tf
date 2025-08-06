@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_role" "codebuild_role" {
   name = "${var.project_name}-codebuild-role"
 
@@ -13,7 +15,7 @@ resource "aws_iam_role" "codebuild_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "codebuild_policies" {
+resource "aws_iam_role_policy_attachment" "codebuild_managed_policy" {
   role       = aws_iam_role.codebuild_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess"
 }
@@ -31,6 +33,54 @@ resource "aws_iam_role_policy" "codebuild_logs" {
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "codebuild_s3_artifact_access" {
+  name = "${var.project_name}-codebuild-s3-artifact-access"
+  role = aws_iam_role.codebuild_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:GetBucketVersioning"
+        ],
+        Resource = [
+          "arn:aws:s3:::${var.artifact_bucket}",
+          "arn:aws:s3:::${var.artifact_bucket}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "codebuild_ecr_permissions" {
+  name = "${var.project_name}-codebuild-ecr-policy"
+  role = aws_iam_role.codebuild_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:PutImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload"
         ],
         Resource = "*"
       }
@@ -81,8 +131,6 @@ resource "aws_iam_role_policy" "codepipeline_artifact_permissions" {
   })
 }
 
-data "aws_caller_identity" "current" {}
-
 resource "aws_iam_role_policy" "codepipeline_startbuild" {
   name = "${var.project_name}-startbuild-policy"
   role = aws_iam_role.codepipeline_role.id
@@ -97,29 +145,6 @@ resource "aws_iam_role_policy" "codepipeline_startbuild" {
           "codebuild:BatchGetBuilds"
         ],
         Resource = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:project/${var.project_name}-build"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "codebuild_s3_artifact_access" {
-  name = "${var.project_name}-codebuild-s3-artifact-access"
-  role = aws_iam_role.codebuild_role.name
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:GetBucketVersioning"
-        ],
-        Resource = [
-          "arn:aws:s3:::${var.artifact_bucket}",
-          "arn:aws:s3:::${var.artifact_bucket}/*"
-        ]
       }
     ]
   })
