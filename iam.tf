@@ -76,7 +76,7 @@ resource "aws_iam_role_policy" "codepipeline_startbuild" {
           "codebuild:StartBuild",
           "codebuild:BatchGetBuilds"
         ],
-        Resource = "arn:aws:codebuild:${var.region}:${data.aws_caller_identity.current.account_id}:project/${var.project_name}-build"
+        Resource = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:project/${var.project_name}-build"
       }
     ]
   })
