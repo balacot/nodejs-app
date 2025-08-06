@@ -3,19 +3,24 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo "Autenticando con ECR..."
-      - aws ecr get-login-password | docker login --username AWS --password-stdin $REPOSITORY_URI
-      - TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+
   build:
     commands:
-      - echo "Construyendo imagen Docker..."
-      - docker build -t $REPOSITORY_URI:$TAG .
-      - docker tag $REPOSITORY_URI:$TAG $REPOSITORY_URI:latest
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+      - docker tag $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION $REPOSITORY_URI:latest
+
   post_build:
     commands:
-      - echo "Publicando imagen a ECR..."
-      - docker push $REPOSITORY_URI:$TAG
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
       - docker push $REPOSITORY_URI:latest
-      - echo '[{"name":"nodejs-container","imageUri":"'"$REPOSITORY_URI"':latest"}]' > imagedefinitions.json
+      - echo Writing imagedefinitions.json file...
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION" > imagedefinitions.json
+
 artifacts:
-  files: imagedefinitions.json
+  files:
+    - imagedefinitions.json

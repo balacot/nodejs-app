@@ -24,11 +24,16 @@ resource "aws_codebuild_project" "nodejs_build" {
       name  = "AWS_REGION"
       value = var.aws_region
     }
+
+    environment_variable {
+      name  = "CONTAINER_NAME"
+      value = "nodejs-app" # nombre del contenedor definido en ECS task definition
+    }
   }
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = "buildspec.yml"
+    buildspec = file("${path.module}/buildspec.yml") # ← mejor práctica
   }
 
   tags = {
